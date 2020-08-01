@@ -1,0 +1,20 @@
+.app{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .score{
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: solid black 1px;
+        top: 0;
+        width: 100%;
+    }
+
+    .startTitle{
+        position: absolute;
+        top:50%;
+    }
+}
