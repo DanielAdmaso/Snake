@@ -1,5 +1,6 @@
 # Snake
 Simple Snake game with react.
+[Demo](https://snake-game-345345.web.app/) 
 
 ## Quick start
 Clone down this repository. You will need node and npm installed globally on your machine.
