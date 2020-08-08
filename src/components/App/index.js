@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import style from './App.module.scss';
-import { Piece } from '../Piece';
-import { DIRECTIONS, getSnakeHead, hasLose, getPieceToAdd, shouldEat, SIZES, getRandomFoodCoordinate } from '../../utils/utils';
+import { getSnakeHead, hasLose, getPieceToAdd, shouldEat, getRandomFoodCoordinate } from '../../utils/utils';
 import { Food } from '../Food';
 import { Snake } from '../Snake';
+import { DIRECTIONS, SIZES } from '../../utils/constants';
 
 let moveTimeout = null;
 let keyUpHandlerTimeout = null;
@@ -19,7 +19,7 @@ export const App = () => {
     const [foodCoordinate, setFoodCoordinate] = useState(getRandomFoodCoordinate(initialPecies))
     const [score, setScore] = useState(0);
 
-    const handleMove = (e) => {
+    const handleMove = useCallback((e) => {
         if (keyUpHandlerTimeout) {
             clearTimeout(keyUpHandlerTimeout)
         }
@@ -48,6 +48,53 @@ export const App = () => {
                     break;
             }
         }, speed)
+    })
+
+    const start = () => {
+        setIsNewGame(false);
+        setDirection(DIRECTIONS.RIGHT)
+    }
+
+    const pause = () => {
+        setDirection(direction ? null : lastDirection);
+    }
+
+    const startNewGame = () => {
+        lastDirection = null
+        setDirection(null);
+        setIsNewGame(true)
+        setPecies(initialPecies);
+        setSpeed(160)
+        setScore(0)
+        level = 1;
+    }
+
+    const hasEat = () => {
+        const snakeHead = getSnakeHead(pecies);
+        if (shouldEat(direction, snakeHead, foodCoordinate)) {
+            setScore(score + 10)
+            const peiceToAdd = getPieceToAdd(direction, snakeHead);
+            snakeHead.head = false;
+            pecies.push(peiceToAdd);
+            setPecies(pecies);
+            setFoodCoordinate(getRandomFoodCoordinate(pecies))
+        }
+    }
+    
+    const move = () => {
+        if (!isNewGame) {
+            if (moveTimeout) {
+                clearTimeout(moveTimeout)
+            }
+            moveTimeout = setTimeout(() => {
+                const snakeHead = getSnakeHead(pecies);
+                const newPeices = pecies.slice(1);
+                const newPiece = getPieceToAdd(direction, snakeHead);
+                newPeices.push(newPiece);
+                snakeHead.head = false;
+                setPecies(newPeices);
+            }, speed);
+        }
     }
 
     useEffect(() => {
@@ -78,54 +125,7 @@ export const App = () => {
             level++;
             setSpeed(speed * 0.9);
         }
-    }, [score])
-
-    const hasEat = () => {
-        const snakeHead = getSnakeHead(pecies);
-        if (shouldEat(direction, snakeHead, foodCoordinate)) {
-            setScore(score + 10)
-            const peiceToAdd = getPieceToAdd(direction, snakeHead);
-            snakeHead.head = false;
-            pecies.push(peiceToAdd);
-            setPecies(pecies);
-            setFoodCoordinate(getRandomFoodCoordinate(pecies))
-        }
-    }
-
-    const start = () => {
-        setIsNewGame(false);
-        setDirection(DIRECTIONS.RIGHT)
-    }
-
-    const pause = () => {
-        setDirection(direction ? null : lastDirection);
-    }
-
-    const startNewGame = () => {
-        lastDirection = null
-        setDirection(null);
-        setIsNewGame(true)
-        setPecies(initialPecies);
-        setSpeed(160)
-        setScore(0)
-        level = 1;
-    }
-
-    const move = () => {
-        if (!isNewGame) {
-            if (moveTimeout) {
-                clearTimeout(moveTimeout)
-            }
-            moveTimeout = setTimeout(() => {
-                const snakeHead = getSnakeHead(pecies);
-                const newPeices = pecies.slice(1);
-                const newPiece = getPieceToAdd(direction, snakeHead);
-                newPeices.push(newPiece);
-                snakeHead.head = false;
-                setPecies(newPeices);
-            }, speed);
-        }
-    }
+    }, [score, speed])
 
     return (
         <div className={style.wrapper}>

@@ -1,13 +1,4 @@
-export const DIRECTIONS = {
-    RIGHT: 'right',
-    LEFT: 'left',
-    UP: 'up',
-    DOWN: 'down'
-}
-
-export const SIZES = {
-    piece: 30,
-}
+import { DIRECTIONS, SIZES } from '../utils/constants';
 
 export const hasLose = (pecies) => touchInLimits(pecies) || touchInBody(pecies);
 
