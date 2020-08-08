@@ -44,7 +44,6 @@ export const App = () => {
                     !isNewGame && direction !== DIRECTIONS.UP && setDirection(DIRECTIONS.DOWN)
                     break;
                 default:
-                    console.log('default')
                     setDirection(lastDirection)
                     break;
             }
@@ -62,8 +61,8 @@ export const App = () => {
 
     useEffect(() => {
         if (hasLose(pecies)) {
-            alert('lose');
             startNewGame();
+            alert('lose');
         } else {
             if (direction) {
                 lastDirection = direction;
@@ -103,34 +102,35 @@ export const App = () => {
     }
 
     const startNewGame = () => {
+        lastDirection = null
         setDirection(null);
         setIsNewGame(true)
         setPecies(initialPecies);
         setSpeed(160)
         setScore(0)
         level = 1;
-        lastDirection = null
     }
 
     const move = () => {
-        if (moveTimeout) {
-            clearTimeout(moveTimeout)
+        if (!isNewGame) {
+            if (moveTimeout) {
+                clearTimeout(moveTimeout)
+            }
+            moveTimeout = setTimeout(() => {
+                const snakeHead = getSnakeHead(pecies);
+                const newPeices = pecies.slice(1);
+                const newPiece = getPieceToAdd(direction, snakeHead);
+                newPeices.push(newPiece);
+                snakeHead.head = false;
+                setPecies(newPeices);
+            }, speed);
         }
-        moveTimeout = setTimeout(() => {
-            const snakeHead = getSnakeHead(pecies);
-            const newPeices = pecies.slice(1);
-            const newPiece = getPieceToAdd(direction, snakeHead);
-            newPeices.push(newPiece);
-            snakeHead.head = false;
-            setPecies(newPeices);
-        }, speed);
     }
 
     return (
         <div className={style.wrapper}>
             <div className={style.score} style={{ height: SIZES.piece }} > <h2>Score: {score} | Level: {level}</h2> </div>
-            <Snake pecies={pecies} direction={direction} lastDirection={lastDirection} />
-            {/* {pecies.map((piece, i) => <Piece key={`piece-${i}`} x={piece.x} y={piece.y} head={piece.head} direction={direction || lastDirection || DIRECTIONS.RIGHT} />)} */}
+            <Snake pecies={pecies} direction={isNewGame ? DIRECTIONS.RIGHT : direction} lastDirection={lastDirection} />
             {isNewGame && <div className={style.startTitle}> <h1>Click Enter to start</h1> </div>}
             {!isNewGame && <Food foodCoordinate={foodCoordinate} />}
         </div>)
