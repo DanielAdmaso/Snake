@@ -1,5 +1,11 @@
-.headWrapper{
-	background: green;
+.headWrapper {
+	background: #588841;
 	position: absolute;
-    z-index: 1;
+	z-index: 1;
+	border-radius: 15px;
+
+	.head {
+		position: relative;
+		z-index: 1;
+	}
 }

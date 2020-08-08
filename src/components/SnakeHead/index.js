@@ -1,10 +1,12 @@
 import React from 'react';
 import style from './SnakeHead.module.scss';
-import { SIZES, getHeadRadius, getSimplePieceStyle } from '../App/utils';
+import { getHeadTransform, getSimplePieceStyle, SIZES } from '../../utils/utils';
 
 export const SnakeHead = ({ x, y, direction }) => {
-    const headStyle = { ...getSimplePieceStyle(x,y), ...getHeadRadius(direction) };
-    return <div className={style.headWrapper} style={headStyle}>
+    const headWrapperStyle = { ...getSimplePieceStyle(x,y) };
+    const headStyle = {width: SIZES.piece + 28, height: SIZES.piece + 28 ,...getHeadTransform(direction)};
+    return <div className={style.headWrapper} style={headWrapperStyle}>
+        <img src='/snake_head.png' className={style.head} style={headStyle}/>
     </div>
 }
 

@@ -1,45 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import style from './App.module.scss';
-import { Peice } from '../Peice';
-import { DIRECTIONS, getSnakeHead, getRandomX, getRandomY, deepCopy, SIZES } from './utils';
+import { Piece } from '../Piece';
+import { DIRECTIONS, getSnakeHead, hasLose, getPieceToAdd, shouldEat, SIZES, getRandomFoodCoordinate } from '../../utils/utils';
 import { Food } from '../Food';
+import { Snake } from '../Snake';
 
-let timeout = null;
+let moveTimeout = null;
+let keyUpHandlerTimeout = null;
 let lastDirection = null;
 let level = 1;
+
 export const App = () => {
-    const initialPecies = [{ x: 0, y: SIZES.peice }, { x: SIZES.peice, y: SIZES.peice, head: true }];
+    const initialPecies = [{ x: 0, y: SIZES.piece }, { x: SIZES.piece, y: SIZES.piece, head: true }];
     const [isNewGame, setIsNewGame] = useState(true);
     const [pecies, setPecies] = useState(initialPecies);
     const [direction, setDirection] = useState(null);
-    const [speed, setSpeed] = useState(8);
-    const [foodCordinate, setFoodCordinate] = useState({ x: getRandomX(), y: getRandomY() })
+    const [speed, setSpeed] = useState(160);
+    const [foodCoordinate, setFoodCoordinate] = useState(getRandomFoodCoordinate(initialPecies))
     const [score, setScore] = useState(0);
 
     const handleMove = (e) => {
-        switch (e.keyCode) {
-            case 13:
-                start()
-                break;
-            case 32:
-                pause()
-                break;
-            case 37:
-                !isNewGame && direction !== DIRECTIONS.RIGHT && setDirection(DIRECTIONS.LEFT)
-                break;
-            case 38:
-                !isNewGame && direction !== DIRECTIONS.DOWN && setDirection(DIRECTIONS.UP)
-                break;
-            case 39:
-                !isNewGame && direction !== DIRECTIONS.LEFT && setDirection(DIRECTIONS.RIGHT);
-                break;
-            case 40:
-                !isNewGame && direction !== DIRECTIONS.UP && setDirection(DIRECTIONS.DOWN)
-                break;
-            default:
-                setDirection(null)
-                break;
+        if (keyUpHandlerTimeout) {
+            clearTimeout(keyUpHandlerTimeout)
         }
+        keyUpHandlerTimeout = setTimeout(() => {
+            switch (e.keyCode) {
+                case 13:
+                    isNewGame && start()
+                    break;
+                case 32:
+                    pause()
+                    break;
+                case 37:
+                    !isNewGame && direction !== DIRECTIONS.RIGHT && setDirection(DIRECTIONS.LEFT)
+                    break;
+                case 38:
+                    !isNewGame && direction !== DIRECTIONS.DOWN && setDirection(DIRECTIONS.UP)
+                    break;
+                case 39:
+                    !isNewGame && direction !== DIRECTIONS.LEFT && setDirection(DIRECTIONS.RIGHT);
+                    break;
+                case 40:
+                    !isNewGame && direction !== DIRECTIONS.UP && setDirection(DIRECTIONS.DOWN)
+                    break;
+                default:
+                    console.log('default')
+                    setDirection(lastDirection)
+                    break;
+            }
+        }, speed)
     }
 
     useEffect(() => {
@@ -52,10 +61,15 @@ export const App = () => {
 
 
     useEffect(() => {
-        if (!hasLose() && direction) {
-            hasEat();
-            lastDirection = direction;
-            move();
+        if (hasLose(pecies)) {
+            alert('lose');
+            startNewGame();
+        } else {
+            if (direction) {
+                lastDirection = direction;
+                hasEat();
+                move();
+            }
         }
     }, [pecies, direction])
 
@@ -67,75 +81,21 @@ export const App = () => {
         }
     }, [score])
 
-    const hasLose = (e) => {
-        const snakeHead = getSnakeHead(pecies);
-        if (touchInLimits(snakeHead) || touchInBody()) {
-            alert('lose');
-            startNewGame();
-            return true;
-        }
-    }
-
-
-    const touchInLimits = (snakeHead) => {
-        return snakeHead && (snakeHead.x >= window.innerWidth - 5 || snakeHead.x < 0 || snakeHead.y >= window.innerHeight - 5 || snakeHead.y < 15)
-    }
-
-    const touchInBody = () => {
-        const snakeBody = deepCopy(pecies);
-        const snakeHead = snakeBody.pop();
-        return snakeBody.some(p => p.x === snakeHead.x && p.y === snakeHead.y);
-    }
-
     const hasEat = () => {
         const snakeHead = getSnakeHead(pecies);
-        // console.log({x:snakeHead.x, y: snakeHead.y, foodCordinateX: foodCordinate.x, foodCordinateY: foodCordinate.y})
-        if (shouldEat(snakeHead)) {
+        if (shouldEat(direction, snakeHead, foodCoordinate)) {
             setScore(score + 10)
-            const peiceToAdd = getPieceToAdd(snakeHead);
+            const peiceToAdd = getPieceToAdd(direction, snakeHead);
             snakeHead.head = false;
             pecies.push(peiceToAdd);
             setPecies(pecies);
-            setFoodCordinate({ x: getRandomX(), y: getRandomY() })
-        }
-    }
-
-    const shouldEat = (snakeHead) => {
-        const { x: snakeX, y: snakeY } = snakeHead;
-        const { x: foodX, y: foodY } = foodCordinate;
-        switch (direction) {
-            case DIRECTIONS.RIGHT:
-                return snakeX === foodX - SIZES.peice && snakeY === foodY;
-            case DIRECTIONS.LEFT:
-                return snakeX === foodX + SIZES.peice && snakeY === foodY;
-            case DIRECTIONS.UP:
-                return snakeY === foodY + SIZES.peice && snakeX === foodX;
-            case DIRECTIONS.DOWN:
-                return snakeY === foodY - SIZES.peice && snakeX === foodX;
-            default:
-                break;
-        }
-    }
-    const getPieceToAdd = (snakeHead) => {
-        switch (direction) {
-            case DIRECTIONS.RIGHT:
-                return { ...snakeHead, x: snakeHead.x + SIZES.peice }
-            case DIRECTIONS.LEFT:
-                return { ...snakeHead, x: snakeHead.x - SIZES.peice }
-            case DIRECTIONS.UP:
-                return { ...snakeHead, y: snakeHead.y - SIZES.peice }
-            case DIRECTIONS.DOWN:
-                return { ...snakeHead, y: snakeHead.y + SIZES.peice }
-            default:
-                break;
+            setFoodCoordinate(getRandomFoodCoordinate(pecies))
         }
     }
 
     const start = () => {
-        if (isNewGame) {
-            setIsNewGame(false);
-            setDirection(DIRECTIONS.RIGHT)
-        }
+        setIsNewGame(false);
+        setDirection(DIRECTIONS.RIGHT)
     }
 
     const pause = () => {
@@ -146,31 +106,33 @@ export const App = () => {
         setDirection(null);
         setIsNewGame(true)
         setPecies(initialPecies);
-        setSpeed(10)
+        setSpeed(160)
         setScore(0)
         level = 1;
         lastDirection = null
     }
 
     const move = () => {
-        if (timeout) {
-            clearTimeout(timeout)
+        if (moveTimeout) {
+            clearTimeout(moveTimeout)
         }
-        timeout = setTimeout(() => {
+        moveTimeout = setTimeout(() => {
             const snakeHead = getSnakeHead(pecies);
             const newPeices = pecies.slice(1);
-            const newPiece = getPieceToAdd(snakeHead);
+            const newPiece = getPieceToAdd(direction, snakeHead);
             newPeices.push(newPiece);
             snakeHead.head = false;
             setPecies(newPeices);
-        }, speed * 20);
+        }, speed);
     }
 
-    return <div className={style.app}>
-        <div className={style.score} style={{ height: SIZES.peice }} > Score: {score} | Level: {level} </div>
-        {pecies.map((peice, i) => <Peice key={`peice-${i}`} x={peice.x} y={peice.y} head={peice.head} direction={direction || lastDirection || DIRECTIONS.RIGHT} />)}
-        {isNewGame &&<div className={style.startTitle}> <h1 >Click Enter to start</h1> </div>}
-        {!isNewGame && <Food foodCordinate={foodCordinate} />}
-    </div>
+    return (
+        <div className={style.wrapper}>
+            <div className={style.score} style={{ height: SIZES.piece }} > <h2>Score: {score} | Level: {level}</h2> </div>
+            <Snake pecies={pecies} direction={direction} lastDirection={lastDirection} />
+            {/* {pecies.map((piece, i) => <Piece key={`piece-${i}`} x={piece.x} y={piece.y} head={piece.head} direction={direction || lastDirection || DIRECTIONS.RIGHT} />)} */}
+            {isNewGame && <div className={style.startTitle}> <h1>Click Enter to start</h1> </div>}
+            {!isNewGame && <Food foodCoordinate={foodCoordinate} />}
+        </div>)
 }
 

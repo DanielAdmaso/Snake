@@ -1,5 +1,11 @@
 .food{
-    background: orange;
+    // background: orange;
     position: absolute;
     border-radius: 20px;
+
+    .apple{
+        position: relative;
+    top: -7px;
+    right: 5px;
+    }
 }

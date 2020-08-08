@@ -1,20 +1,24 @@
-.app{
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.wrapper {
+	background-image: url("/background.jpg");
+	width: calc(100% - 15px);
+	height: calc(100% - 15px);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	position: absolute;
+	overflow: hidden;
+	.score {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		position: absolute;
+		border-bottom: solid black 1px;
+		width: 100%;
+	}
 
-    .score{
-        position: absolute;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-bottom: solid black 1px;
-        top: 0;
-        width: 100%;
-    }
-
-    .startTitle{
-        position: absolute;
-        top:50%;
-    }
+	.startTitle {
+		position: absolute;
+		top: calc(50% - 37px/2);
+		left: calc(50% - 265px/2);
+	}
 }
